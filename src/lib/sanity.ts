@@ -38,9 +38,15 @@ export interface Settings {
   publicationDirector?: string
 }
 
-import { DEFAULT_SERVICES, DEFAULT_ZONES } from '../data/defaults'
+import { DEFAULT_SERVICES, DEFAULT_SETTINGS, DEFAULT_ZONES } from '../data/defaults'
 
-export const getSettings = () => fetchSanity<Settings>(`*[_id == "settings"][0]`)
+export async function getSettings(): Promise<Settings> {
+  const doc = await fetchSanity<Settings>(`*[_id == "settings"][0]`)
+  return {
+    ...DEFAULT_SETTINGS,
+    ...Object.fromEntries(Object.entries(doc ?? {}).filter(([, v]) => v !== undefined && v !== null && v !== '')),
+  }
+}
 
 /** Données partagées par le formulaire de devis (/contact et section #devis) */
 export async function getQuoteFormData() {

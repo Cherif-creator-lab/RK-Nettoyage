@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
-import { fetchSanity, type Settings } from '../lib/sanity'
+import { getSettings } from '../lib/sanity'
 
-const settings = await fetchSanity<Settings>(`*[_id == "settings"][0]`)
+const settings = await getSettings()
 const siteName = settings?.siteName ?? 'RK Nettoyage Multi Services'
 const legalName = settings?.legalName ?? siteName
 ---

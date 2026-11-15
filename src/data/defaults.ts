@@ -16,6 +16,14 @@ export interface DefaultZone {
   localIntro: string
 }
 
+export const DEFAULT_SETTINGS = {
+  siteName: 'RK Nettoyage Multi Services',
+  phone: '06.20.50.89.92',
+  email: 'Rknettoyage01@gmail.com',
+  footerText:
+    'Nettoyage, entretien des locaux, espaces verts et petits travaux à Lyon et ses alentours (01, 38, 42).',
+}
+
 export const DEFAULT_HERO_SUBTITLE =
   'Particuliers, entreprises, copropriétés et agences : un seul interlocuteur pour le nettoyage, les espaces verts et les petits travaux, à Lyon et ses alentours.'
 

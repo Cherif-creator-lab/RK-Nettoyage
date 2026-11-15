@@ -4,6 +4,7 @@ import Header from '../components/Header.astro'
 import Footer from '../components/Footer.astro'
 import { sanityClient } from 'sanity:client'
 import type { Settings } from '../lib/sanity'
+import { DEFAULT_SETTINGS } from '../data/defaults'
 
 interface Props {
   title?: string
@@ -12,12 +13,18 @@ interface Props {
   overlayHeader?: boolean
 }
 
-// Toutes les infos du site viennent du document unique « settings »
-let settings: Settings | null = null
+// Toutes les infos du site viennent du document unique « settings » (avec repli sur les coordonnées client)
+let sanitySettings: Settings | null = null
 try {
-  settings = await sanityClient.fetch<Settings | null>(`*[_id == "settings"][0]`)
+  sanitySettings = await sanityClient.fetch<Settings | null>(`*[_id == "settings"][0]`)
 } catch (error) {
   console.warn('[sanity] settings indisponibles :', (error as Error).message)
+}
+const settings: Settings = {
+  ...DEFAULT_SETTINGS,
+  ...Object.fromEntries(
+    Object.entries(sanitySettings ?? {}).filter(([, v]) => v !== undefined && v !== null && v !== ''),
+  ),
 }
 const siteName = settings?.siteName ?? 'RK Nettoyage Multi Services'
 const {
