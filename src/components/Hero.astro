@@ -1,0 +1,56 @@
+---
+import { fetchSanity, hasImage, urlFor, type SanityImage } from '../lib/sanity'
+
+interface HeroData {
+  heroTitle?: string
+  heroSubtitle?: string
+  heroImage?: SanityImage
+}
+
+const data = await fetchSanity<HeroData>(`*[_id == "homePage"][0]{ heroTitle, heroSubtitle, heroImage }`)
+
+const title = data?.heroTitle ?? 'Un nettoyage impeccable, en toute confiance'
+const subtitle =
+  data?.heroSubtitle ??
+  "Ménage, vitres, entretien des locaux, espaces verts et petits travaux : RK Nettoyage Multi Services s'occupe de tout, chez vous comme au bureau."
+const image = hasImage(data?.heroImage)
+  ? {
+      src: urlFor(data.heroImage).width(1920).quality(80).url(),
+      srcset: [640, 1024, 1440, 1920].map((w) => `${urlFor(data.heroImage!).width(w).quality(80).url()} ${w}w`).join(', '),
+      alt: data.heroImage.alt ?? '',
+    }
+  : { src: '/images/hero.webp', srcset: undefined, alt: 'Agent RK Nettoyage dépoussiérant des étagères de bureau' }
+---
+
+<section class="relative isolate flex min-h-[100svh] items-end overflow-hidden bg-brand-dark">
+  <img
+    src={image.src}
+    srcset={image.srcset}
+    sizes="100vw"
+    alt={image.alt}
+    class="absolute inset-0 -z-20 h-full w-full object-cover object-[70%_center]"
+    fetchpriority="high"
+    decoding="async"
+  />
+  <!-- Dégradé : du bas sur mobile, de la gauche sur ordinateur -->
+  <div
+    class="absolute inset-0 -z-10 bg-linear-to-t from-brand-dark/95 via-brand-dark/60 to-brand-dark/10 md:bg-linear-to-r md:from-brand-dark/90 md:via-brand-dark/55 md:to-transparent"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="container-page pt-32 pb-12 md:pb-20">
+    <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+      <div class="max-w-2xl text-white">
+        <h1 class="text-4xl leading-[1.1] sm:text-5xl lg:text-6xl">{title}</h1>
+        <p class="mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg">{subtitle}</p>
+      </div>
+      <a href="#devis" class="btn btn-white w-full shrink-0 py-4 text-base sm:w-auto sm:px-8">
+        Demander un devis
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>

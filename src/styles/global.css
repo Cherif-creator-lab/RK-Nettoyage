@@ -1,1 +1,70 @@
 @import "tailwindcss";
+
+/* ── Charte RK Nettoyage ─────────────────────────────── */
+@theme {
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand: #2f4a40;       /* vert principal */
+  --color-brand-dark: #1f332c;  /* vert foncé */
+  --color-surface: #f5f6f5;     /* fond */
+  --color-accent: #f2c230;      /* accent jaune */
+
+  --shadow-card: 0 1px 2px rgb(31 51 44 / 0.04), 0 8px 24px rgb(31 51 44 / 0.06);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface font-sans text-brand-dark antialiased;
+  }
+
+  h1,
+  h2 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h3,
+  h4 {
+    @apply font-medium;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+}
+
+@layer components {
+  /* Boutons pilule */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition duration-200 active:scale-[0.98];
+  }
+
+  .btn-primary {
+    @apply bg-brand text-white hover:bg-brand-dark;
+  }
+
+  .btn-white {
+    @apply bg-white text-brand-dark hover:bg-surface;
+  }
+
+  .btn-accent {
+    @apply bg-accent text-brand-dark hover:brightness-95;
+  }
+
+  /* Cartes blanches */
+  .card {
+    @apply rounded-xl bg-white p-6 shadow-card;
+  }
+
+  /* Petit sur-titre « 01 // SECTION » de la maquette */
+  .eyebrow {
+    @apply text-xs font-medium tracking-widest text-brand/70 uppercase;
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-5 md:px-8;
+  }
+}
