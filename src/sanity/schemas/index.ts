@@ -1,4 +1,9 @@
-import type { SchemaTypeDefinition } from 'sanity'
+import { settings } from './settings'
+import { homePage } from './homePage'
+import { service } from './service'
+import { zone } from './zone'
 
-// Ajouter ici les schémas (service, avis, réalisation, etc.)
-export const schemaTypes: SchemaTypeDefinition[] = []
+export const schemaTypes = [settings, homePage, service, zone]
+
+/** Types gérés comme documents uniques (pas de liste dans le studio). */
+export const singletonTypes = new Set(['settings', 'homePage'])
