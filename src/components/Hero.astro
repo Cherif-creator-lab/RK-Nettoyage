@@ -1,5 +1,6 @@
 ---
 import { fetchSanity, hasImage, urlFor, type SanityImage } from '../lib/sanity'
+import { DEFAULT_HERO_SUBTITLE } from '../data/defaults'
 
 interface HeroData {
   heroTitle?: string
@@ -10,9 +11,7 @@ interface HeroData {
 const data = await fetchSanity<HeroData>(`*[_id == "homePage"][0]{ heroTitle, heroSubtitle, heroImage }`)
 
 const title = data?.heroTitle ?? 'Un nettoyage impeccable, en toute confiance'
-const subtitle =
-  data?.heroSubtitle ??
-  "Ménage, vitres, entretien des locaux, espaces verts et petits travaux : RK Nettoyage Multi Services s'occupe de tout, chez vous comme au bureau."
+const subtitle = data?.heroSubtitle ?? DEFAULT_HERO_SUBTITLE
 const image = hasImage(data?.heroImage)
   ? {
       src: urlFor(data.heroImage).width(1920).quality(80).url(),

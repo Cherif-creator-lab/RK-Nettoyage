@@ -2,6 +2,7 @@
 import Icon from './Icon.astro'
 import SectionHeading from './SectionHeading.astro'
 import { fetchSanity, hasImage, urlFor, type SanityImage } from '../lib/sanity'
+import { DEFAULT_SERVICES } from '../data/defaults'
 
 interface Service {
   title: string
@@ -13,6 +14,7 @@ interface Service {
 
 interface ServiceView {
   title: string
+  slug?: string
   description?: string
   icon?: string
   image: { src: string; alt: string }
@@ -24,48 +26,23 @@ const services = await fetchSanity<Service[]>(
   }`,
 )
 
-// Valeurs d'attente tant qu'aucun service n'est publié dans Sanity
-const DEFAULT_SERVICES: ServiceView[] = [
-  {
-    title: 'Entretien de bureaux et locaux',
-    description:
-      'Sols, bureaux, sanitaires et parties communes : un entretien régulier et soigné, organisé selon vos horaires pour ne jamais gêner votre activité.',
-    icon: 'building',
-    image: { src: '/images/sols.webp', alt: 'Agent RK Nettoyage lavant le sol d’un hall de bureaux' },
-  },
-  {
-    title: 'Nettoyage de vitres',
-    description:
-      'Vitres, baies vitrées et vérandas lavées sans traces, à l’intérieur comme à l’extérieur, pour retrouver toute la lumière.',
-    icon: 'window',
-    image: { src: '/images/vitres.webp', alt: 'Agent RK Nettoyage nettoyant une vitre à la raclette' },
-  },
-  {
-    title: 'Espaces verts',
-    description:
-      'Taille de haies, tonte et entretien de vos extérieurs, pour un jardin net et accueillant toute l’année.',
-    icon: 'leaf',
-    image: { src: '/images/espaces-verts.webp', alt: 'Agent RK Nettoyage taillant une haie' },
-  },
-  {
-    title: 'Petits travaux',
-    description:
-      'Remplacement d’ampoules, montage de meubles, petites réparations : un coup de main fiable pour tout ce qui traîne.',
-    icon: 'wrench',
-    image: { src: '/images/petits-travaux.webp', alt: 'Agent RK Nettoyage changeant une ampoule au plafond' },
-  },
-]
-
 const items: ServiceView[] = services?.length
   ? services.map((s) => ({
       title: s.title,
+      slug: s.slug,
       description: s.shortDescription,
       icon: s.icon,
       image: hasImage(s.image)
         ? { src: urlFor(s.image).width(1000).height(750).fit('crop').url(), alt: s.image.alt ?? s.title }
         : { src: '/images/produits.webp', alt: s.title },
     }))
-  : DEFAULT_SERVICES
+  : DEFAULT_SERVICES.map((s) => ({
+      title: s.title,
+      slug: s.slug,
+      description: s.shortDescription,
+      icon: s.icon,
+      image: s.image,
+    }))
 ---
 
 <section id="prestations" class="bg-white py-20 md:py-28">
@@ -102,9 +79,23 @@ const items: ServiceView[] = services?.length
               {service.description && (
                 <p class="mt-4 text-sm leading-relaxed text-brand-dark/65 md:text-base">{service.description}</p>
               )}
-              <a href="#devis" class="btn btn-primary mt-7" data-service={service.title}>
-                Demander un devis
-              </a>
+              <div class="mt-7 flex flex-wrap items-center gap-4">
+                <a
+                  href={service.slug ? `/contact?prestation=${service.slug}` : '/contact'}
+                  class="btn btn-primary"
+                >
+                  Demander un devis
+                </a>
+                {service.slug && (
+                  <a
+                    href={`/prestations/${service.slug}`}
+                    class="inline-flex items-center gap-1.5 text-sm font-medium text-brand underline decoration-accent decoration-2 underline-offset-4 hover:text-brand-dark"
+                  >
+                    En savoir plus
+                    <Icon name="arrow-right" class="h-4 w-4" />
+                  </a>
+                )}
+              </div>
             </div>
           </article>
         ))

@@ -1,0 +1,140 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Icon from '../../components/Icon.astro'
+import { fetchSanity } from '../../lib/sanity'
+import { DEFAULT_SERVICES, DEFAULT_ZONES } from '../../data/defaults'
+
+interface ZoneDoc {
+  city: string
+  department?: string
+  slug: string
+  localIntro?: string
+}
+
+interface ZonePageProps {
+  city: string
+  department?: string
+  slug: string
+  localIntro?: string
+  services: { title: string; slug: string; shortDescription?: string; icon?: string }[]
+  otherZones: { city: string; department?: string; slug: string }[]
+}
+
+export async function getStaticPaths() {
+  const [sanityZones, sanityServices] = await Promise.all([
+    fetchSanity<ZoneDoc[]>(
+      `*[_type == "zone" && isActive == true && defined(slug.current)] | order(city asc){
+        city, department, "slug": slug.current, localIntro
+      }`,
+    ),
+    fetchSanity<{ title: string; slug: string; shortDescription?: string; icon?: string }[]>(
+      `*[_type == "service" && defined(slug.current)] | order(order asc, title asc){
+        title, "slug": slug.current, shortDescription, icon
+      }`,
+    ),
+  ])
+
+  const zones: ZoneDoc[] = sanityZones?.length ? sanityZones : DEFAULT_ZONES
+  const services = sanityServices?.length
+    ? sanityServices
+    : DEFAULT_SERVICES.map((s) => ({
+        title: s.title,
+        slug: s.slug,
+        shortDescription: s.shortDescription,
+        icon: s.icon,
+      }))
+
+  return zones.map((zone) => ({
+    params: { slug: zone.slug },
+    props: {
+      ...zone,
+      services,
+      otherZones: zones.filter((z) => z.slug !== zone.slug),
+    },
+  }))
+}
+
+const { city, department, slug, localIntro, services, otherZones } = Astro.props as ZonePageProps
+const pageTitle = `Nettoyage et multi-services à ${city}`
+const intro =
+  localIntro ??
+  `RK Nettoyage Multi Services intervient à ${city}${department ? ` (${department})` : ''} auprès des particuliers, entreprises, copropriétés et agences.`
+---
+
+<BaseLayout title={pageTitle} description={intro}>
+  <section class="pb-20 md:pb-28">
+    <div class="container-page">
+      <nav aria-label="Fil d'Ariane" class="mb-6 flex flex-wrap items-center gap-2 text-xs text-brand-dark/60">
+        <a href="/" class="hover:text-brand">Accueil</a>
+        <span aria-hidden="true">/</span>
+        <a href="/#zones" class="hover:text-brand">Zones</a>
+        <span aria-hidden="true">/</span>
+        <span class="text-brand-dark">{city}</span>
+      </nav>
+
+      <div class="rounded-3xl bg-brand px-6 py-12 text-white md:px-14 md:py-16">
+        <p class="eyebrow flex items-center gap-2 text-white/75">
+          <Icon name="map-pin" class="h-4 w-4 text-accent" />
+          Zone d'intervention{department && ` — ${department}`}
+        </p>
+        <h1 class="mt-4 text-3xl leading-tight font-semibold md:text-5xl">{pageTitle}</h1>
+        <p class="mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">{intro}</p>
+        <div class="mt-8">
+          <a href={`/contact?zone=${slug}`} class="btn btn-white px-8 py-4">
+            Demander un devis à {city}
+            <Icon name="arrow-right" class="h-4 w-4" />
+          </a>
+        </div>
+      </div>
+
+      <div class="mt-16">
+        <h2 class="text-2xl font-semibold text-brand-dark md:text-3xl">Nos prestations disponibles à {city}</h2>
+        <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {
+            services.map((service) => (
+              <article class="card flex flex-col justify-between gap-5">
+                <div>
+                  <span class="flex h-11 w-11 items-center justify-center rounded-full bg-brand/10 text-brand">
+                    <Icon name={service.icon} class="h-5 w-5" />
+                  </span>
+                  <h3 class="mt-4 text-lg font-medium text-brand-dark">{service.title}</h3>
+                  {service.shortDescription && (
+                    <p class="mt-2 text-sm leading-relaxed text-brand-dark/65">{service.shortDescription}</p>
+                  )}
+                </div>
+                <a
+                  href={`/prestations/${service.slug}`}
+                  class="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:text-brand-dark"
+                >
+                  Découvrir
+                  <Icon name="arrow-right" class="h-4 w-4" />
+                </a>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+
+      {
+        otherZones.length > 0 && (
+          <div class="mt-16 border-t border-brand/10 pt-12">
+            <h2 class="text-xl font-semibold text-brand-dark">Autres villes d'intervention</h2>
+            <ul class="mt-5 flex flex-wrap gap-3">
+              {otherZones.map((z) => (
+                <li>
+                  <a
+                    href={`/zones/${z.slug}`}
+                    class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-brand-dark shadow-card transition hover:bg-brand hover:text-white"
+                  >
+                    <Icon name="map-pin" class="h-3.5 w-3.5 text-accent" />
+                    {z.city}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,128 @@
+---
+/**
+ * Rendu simple et sûr du Portable Text de Sanity (sans dépendance externe).
+ */
+export interface PortableTextSpan {
+  _type?: string
+  _key?: string
+  text?: string
+  marks?: string[]
+}
+
+export interface PortableTextMarkDef {
+  _key: string
+  _type: string
+  href?: string
+}
+
+export interface PortableTextBlock {
+  _type: string
+  _key?: string
+  style?: string
+  listItem?: 'bullet' | 'number'
+  level?: number
+  children?: PortableTextSpan[]
+  markDefs?: PortableTextMarkDef[]
+}
+
+interface Props {
+  blocks?: PortableTextBlock[] | null
+}
+
+const { blocks = [] } = Astro.props
+
+function escapeHtml(str: string): string {
+  return str
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+function renderSpans(block: PortableTextBlock): string {
+  const defs = new Map((block.markDefs ?? []).map((d) => [d._key, d]))
+  return (block.children ?? [])
+    .map((span) => {
+      let html = escapeHtml(span.text ?? '')
+      for (const mark of span.marks ?? []) {
+        if (mark === 'strong') html = `<strong class="font-semibold text-brand-dark">${html}</strong>`
+        else if (mark === 'em') html = `<em>${html}</em>`
+        else if (mark === 'underline') html = `<u>${html}</u>`
+        else if (mark === 'code') html = `<code class="rounded bg-surface px-1.5 py-0.5 text-sm">${html}</code>`
+        else {
+          const def = defs.get(mark)
+          if (def?._type === 'link' && def.href && /^(https?:|mailto:|tel:|\/)/i.test(def.href)) {
+            const safeHref = escapeHtml(def.href)
+            const external = def.href.startsWith('http') ? ' target="_blank" rel="noopener noreferrer"' : ''
+            html = `<a href="${safeHref}"${external} class="font-medium text-brand underline decoration-accent underline-offset-4 hover:text-brand-dark">${html}</a>`
+          }
+        }
+      }
+      return html
+    })
+    .join('')
+}
+
+// Regroupe les éléments de liste consécutifs dans <ul> ou <ol>
+type Group =
+  | { kind: 'block'; block: PortableTextBlock }
+  | { kind: 'list'; listType: 'bullet' | 'number'; items: PortableTextBlock[] }
+
+const groups: Group[] = []
+for (const block of blocks ?? []) {
+  if (block._type !== 'block') continue
+  if (block.listItem) {
+    const prev = groups.at(-1)
+    if (prev && prev.kind === 'list' && prev.listType === block.listItem) {
+      prev.items.push(block)
+    } else {
+      groups.push({ kind: 'list', listType: block.listItem, items: [block] })
+    }
+  } else {
+    groups.push({ kind: 'block', block })
+  }
+}
+---
+
+<div class="space-y-4 text-base leading-relaxed text-brand-dark/75">
+  {
+    groups.map((group) => {
+      if (group.kind === 'list') {
+        const Tag = group.listType === 'number' ? 'ol' : 'ul'
+        return (
+          <Tag
+            class:list={[
+              'space-y-2 pl-6',
+              group.listType === 'number' ? 'list-decimal' : 'list-disc marker:text-brand',
+            ]}
+          >
+            {group.items.map((item) => (
+              <li set:html={renderSpans(item)} />
+            ))}
+          </Tag>
+        )
+      }
+
+      const { block } = group
+      const html = renderSpans(block)
+      if (!html) return null
+
+      if (block.style === 'h2') {
+        return <h2 class="pt-4 text-2xl font-semibold text-brand-dark" set:html={html} />
+      }
+      if (block.style === 'h3') {
+        return <h3 class="pt-3 text-xl font-medium text-brand-dark" set:html={html} />
+      }
+      if (block.style === 'h4') {
+        return <h4 class="pt-2 text-lg font-medium text-brand-dark" set:html={html} />
+      }
+      if (block.style === 'blockquote') {
+        return (
+          <blockquote class="border-l-4 border-accent bg-surface/80 py-3 pr-4 pl-5 italic text-brand-dark/80" set:html={html} />
+        )
+      }
+      return <p set:html={html} />
+    })
+  }
+</div>

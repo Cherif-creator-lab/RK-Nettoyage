@@ -1,28 +1,18 @@
 ---
 import { fetchSanity } from '../lib/sanity'
+import { DEFAULT_ZONES } from '../data/defaults'
 
 interface Zone {
   city: string
   department?: string
+  slug?: string
 }
 
 const zones = await fetchSanity<Zone[]>(
-  `*[_type == "zone" && isActive == true && defined(city)] | order(city asc){ city, department }`,
+  `*[_type == "zone" && isActive == true && defined(city)] | order(city asc){ city, department, "slug": slug.current }`,
 )
 
-// Valeurs d'attente tant qu'aucune zone active n'est publiée dans Sanity
-const FALLBACK: Zone[] = [
-  { city: 'Lyon' },
-  { city: 'Villeurbanne' },
-  { city: 'Vénissieux' },
-  { city: 'Bron' },
-  { city: 'Caluire-et-Cuire' },
-  { city: 'Écully' },
-  { city: 'Oullins' },
-  { city: 'Saint-Priest' },
-]
-
-const items = zones?.length ? zones : FALLBACK
+const items = zones?.length ? zones : DEFAULT_ZONES
 // Répète la liste pour remplir largement l'écran, puis la double pour une boucle sans à-coup
 let base = [...items]
 while (base.length < 10) base = [...base, ...items]

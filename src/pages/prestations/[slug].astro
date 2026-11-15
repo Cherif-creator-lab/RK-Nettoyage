@@ -1,0 +1,157 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Icon from '../../components/Icon.astro'
+import PortableText, { type PortableTextBlock } from '../../components/PortableText.astro'
+import { fetchSanity, hasImage, urlFor, type SanityImage } from '../../lib/sanity'
+import { DEFAULT_SERVICES } from '../../data/defaults'
+
+interface ServiceDoc {
+  title: string
+  slug: string
+  shortDescription?: string
+  body?: PortableTextBlock[]
+  image?: SanityImage
+  icon?: string
+}
+
+interface ServicePageProps {
+  title: string
+  slug: string
+  shortDescription?: string
+  body?: PortableTextBlock[]
+  bodyParagraphs?: string[]
+  icon?: string
+  image: { src: string; alt: string }
+  others: { title: string; slug: string; icon?: string }[]
+}
+
+export async function getStaticPaths() {
+  const sanityServices = await fetchSanity<ServiceDoc[]>(
+    `*[_type == "service" && defined(slug.current)] | order(order asc, title asc){
+      title, "slug": slug.current, shortDescription, body, image, icon
+    }`,
+  )
+
+  const list: Omit<ServicePageProps, 'others'>[] = sanityServices?.length
+    ? sanityServices.map((s) => ({
+        title: s.title,
+        slug: s.slug,
+        shortDescription: s.shortDescription,
+        body: s.body,
+        icon: s.icon,
+        image: hasImage(s.image)
+          ? { src: urlFor(s.image).width(1400).height(900).fit('crop').url(), alt: s.image.alt ?? s.title }
+          : { src: '/images/produits.webp', alt: s.title },
+      }))
+    : DEFAULT_SERVICES.map((s) => ({
+        title: s.title,
+        slug: s.slug,
+        shortDescription: s.shortDescription,
+        bodyParagraphs: s.bodyParagraphs,
+        icon: s.icon,
+        image: s.image,
+      }))
+
+  return list.map((item) => ({
+    params: { slug: item.slug },
+    props: {
+      ...item,
+      others: list
+        .filter((other) => other.slug !== item.slug)
+        .slice(0, 3)
+        .map((other) => ({ title: other.title, slug: other.slug, icon: other.icon })),
+    },
+  }))
+}
+
+const { title, slug, shortDescription, body, bodyParagraphs, icon, image, others } = Astro.props as ServicePageProps
+---
+
+<BaseLayout title={title} description={shortDescription}>
+  <section class="pb-20 md:pb-28">
+    <div class="container-page">
+      <nav aria-label="Fil d'Ariane" class="mb-6 flex flex-wrap items-center gap-2 text-xs text-brand-dark/60">
+        <a href="/" class="hover:text-brand">Accueil</a>
+        <span aria-hidden="true">/</span>
+        <a href="/#prestations" class="hover:text-brand">Prestations</a>
+        <span aria-hidden="true">/</span>
+        <span class="text-brand-dark">{title}</span>
+      </nav>
+
+      <div class="grid items-start gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
+        <div>
+          <p class="eyebrow flex items-center gap-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand/10 text-brand">
+              <Icon name={icon} class="h-4 w-4" />
+            </span>
+            Prestation
+          </p>
+          <h1 class="mt-4 text-3xl leading-tight font-semibold text-brand-dark md:text-5xl">{title}</h1>
+          {
+            shortDescription && (
+              <p class="mt-5 text-base leading-relaxed text-brand-dark/75 md:text-lg">{shortDescription}</p>
+            )
+          }
+
+          <div class="mt-8 border-t border-brand/10 pt-8">
+            {
+              body?.length ? (
+                <PortableText blocks={body} />
+              ) : (
+                <div class="space-y-4 text-base leading-relaxed text-brand-dark/75">
+                  {(bodyParagraphs ?? []).map((p) => (
+                    <p>{p}</p>
+                  ))}
+                </div>
+              )
+            }
+          </div>
+
+          <div class="mt-10 flex flex-wrap gap-4">
+            <a href={`/contact?prestation=${slug}`} class="btn btn-primary px-8 py-4">
+              Demander un devis gratuit
+              <Icon name="arrow-right" class="h-4 w-4" />
+            </a>
+            <a href="/#prestations" class="btn bg-white text-brand-dark shadow-card hover:bg-surface">
+              Toutes les prestations
+            </a>
+          </div>
+        </div>
+
+        <div class="lg:sticky lg:top-28">
+          <img
+            src={image.src}
+            alt={image.alt}
+            class="aspect-[4/3] w-full rounded-2xl object-cover shadow-card"
+            width="1400"
+            height="900"
+          />
+        </div>
+      </div>
+
+      {
+        others.length > 0 && (
+          <div class="mt-20 border-t border-brand/10 pt-14">
+            <h2 class="text-2xl font-semibold text-brand-dark">Autres prestations</h2>
+            <div class="mt-6 grid gap-5 md:grid-cols-3">
+              {others.map((other) => (
+                <a
+                  href={`/prestations/${other.slug}`}
+                  class="card group flex items-center justify-between gap-4 transition hover:-translate-y-0.5"
+                >
+                  <div class="flex items-center gap-3">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
+                      <Icon name={other.icon} class="h-5 w-5" />
+                    </span>
+                    <span class="font-medium text-brand-dark group-hover:text-brand">{other.title}</span>
+                  </div>
+                  <Icon name="arrow-right" class="h-4 w-4 shrink-0 text-brand-dark/40 group-hover:text-brand" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
