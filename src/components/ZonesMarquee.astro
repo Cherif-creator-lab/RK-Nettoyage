@@ -1,0 +1,68 @@
+---
+import { fetchSanity } from '../lib/sanity'
+
+interface Zone {
+  city: string
+  department?: string
+}
+
+const zones = await fetchSanity<Zone[]>(
+  `*[_type == "zone" && isActive == true && defined(city)] | order(city asc){ city, department }`,
+)
+
+// Valeurs d'attente tant qu'aucune zone active n'est publiée dans Sanity
+const FALLBACK: Zone[] = [
+  { city: 'Lyon' },
+  { city: 'Villeurbanne' },
+  { city: 'Vénissieux' },
+  { city: 'Bron' },
+  { city: 'Caluire-et-Cuire' },
+  { city: 'Écully' },
+  { city: 'Oullins' },
+  { city: 'Saint-Priest' },
+]
+
+const items = zones?.length ? zones : FALLBACK
+// Répète la liste pour remplir largement l'écran, puis la double pour une boucle sans à-coup
+let base = [...items]
+while (base.length < 10) base = [...base, ...items]
+const duration = `${Math.max(25, base.length * 4)}s`
+---
+
+<section id="zones" class="overflow-hidden border-y border-brand/5 bg-white py-8 md:py-10" aria-labelledby="zones-titre">
+  <div class="container-page mb-5 flex items-center gap-3">
+    <span class="h-px w-8 bg-accent"></span>
+    <h2 id="zones-titre" class="eyebrow">Nos zones d'intervention</h2>
+  </div>
+
+  <!-- Liste lisible par les lecteurs d'écran -->
+  <ul class="sr-only">
+    {items.map((z) => <li>{z.city}{z.department && ` — ${z.department}`}</li>)}
+  </ul>
+
+  <div
+    class="group relative flex [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+    aria-hidden="true"
+  >
+    {
+      [0, 1].map(() => (
+        <ul
+          class="flex shrink-0 animate-marquee items-center group-hover:[animation-play-state:paused] motion-reduce:animate-none"
+          style={`animation-duration: ${duration}`}
+        >
+          {base.map((z) => (
+            <li class="flex items-center gap-6 pr-6 md:gap-10 md:pr-10">
+              <span class="text-2xl font-semibold whitespace-nowrap text-brand-dark/45 md:text-3xl">
+                {z.city}
+                {z.department && <span class="ml-2 text-sm font-normal text-brand-dark/35">{z.department}</span>}
+              </span>
+              <svg class="h-4 w-4 shrink-0 text-accent" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.1 7.9L22 12l-7.9 2.1L12 22l-2.1-7.9L2 12l7.9-2.1z" />
+              </svg>
+            </li>
+          ))}
+        </ul>
+      ))
+    }
+  </div>
+</section>

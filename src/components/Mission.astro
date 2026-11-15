@@ -1,0 +1,54 @@
+---
+import SectionHeading from './SectionHeading.astro'
+import { fetchSanity } from '../lib/sanity'
+
+interface Card {
+  title?: string
+  text?: string
+}
+
+const data = await fetchSanity<{ missionCards?: Card[] }>(`*[_id == "homePage"][0]{ missionCards }`)
+
+const DEFAULT_CARDS: Card[] = [
+  {
+    title: 'Une propreté irréprochable',
+    text: 'Chaque intervention suit une méthode précise et des contrôles qualité, pour un résultat net à chaque passage.',
+  },
+  {
+    title: 'Une équipe formée et de confiance',
+    text: 'Des intervenants sérieux, discrets et ponctuels, formés aux bons gestes et aux produits adaptés à chaque surface.',
+  },
+  {
+    title: 'Une relation simple et transparente',
+    text: 'Un interlocuteur unique, des devis clairs et sans surprise, et une vraie écoute de vos attentes.',
+  },
+]
+
+const cards = data?.missionCards?.length ? data.missionCards : DEFAULT_CARDS
+---
+
+<section id="mission" class="bg-surface py-20 md:py-28">
+  <div class="container-page">
+    <SectionHeading
+      eyebrow="02 // Nos valeurs"
+      title="Notre mission"
+      subtitle="Rendre vos espaces propres, sains et agréables à vivre, chez vous comme au travail, avec un service fiable et humain."
+    />
+
+    <div class="mt-12 grid gap-5 md:grid-cols-3 md:gap-6">
+      {
+        cards.map((card) => (
+          <article class="card flex flex-col transition duration-300 hover:-translate-y-1">
+            <span class="mb-5 h-1 w-10 rounded-full bg-accent" aria-hidden="true" />
+            <h3 class="text-lg leading-snug text-brand-dark">{card.title}</h3>
+            {card.text && <p class="mt-3 text-sm leading-relaxed text-brand-dark/65">{card.text}</p>}
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="mt-10 text-center">
+      <a href="#prestations" class="btn btn-primary">Découvrir nos prestations</a>
+    </div>
+  </div>
+</section>

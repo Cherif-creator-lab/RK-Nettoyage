@@ -1,0 +1,114 @@
+---
+import Icon from './Icon.astro'
+import SectionHeading from './SectionHeading.astro'
+import { fetchSanity, hasImage, urlFor, type SanityImage } from '../lib/sanity'
+
+interface Service {
+  title: string
+  slug?: string
+  shortDescription?: string
+  image?: SanityImage
+  icon?: string
+}
+
+interface ServiceView {
+  title: string
+  description?: string
+  icon?: string
+  image: { src: string; alt: string }
+}
+
+const services = await fetchSanity<Service[]>(
+  `*[_type == "service" && defined(title)] | order(order asc, title asc){
+    title, "slug": slug.current, shortDescription, image, icon
+  }`,
+)
+
+// Valeurs d'attente tant qu'aucun service n'est publié dans Sanity
+const DEFAULT_SERVICES: ServiceView[] = [
+  {
+    title: 'Entretien de bureaux et locaux',
+    description:
+      'Sols, bureaux, sanitaires et parties communes : un entretien régulier et soigné, organisé selon vos horaires pour ne jamais gêner votre activité.',
+    icon: 'building',
+    image: { src: '/images/sols.webp', alt: 'Agent RK Nettoyage lavant le sol d’un hall de bureaux' },
+  },
+  {
+    title: 'Nettoyage de vitres',
+    description:
+      'Vitres, baies vitrées et vérandas lavées sans traces, à l’intérieur comme à l’extérieur, pour retrouver toute la lumière.',
+    icon: 'window',
+    image: { src: '/images/vitres.webp', alt: 'Agent RK Nettoyage nettoyant une vitre à la raclette' },
+  },
+  {
+    title: 'Espaces verts',
+    description:
+      'Taille de haies, tonte et entretien de vos extérieurs, pour un jardin net et accueillant toute l’année.',
+    icon: 'leaf',
+    image: { src: '/images/espaces-verts.webp', alt: 'Agent RK Nettoyage taillant une haie' },
+  },
+  {
+    title: 'Petits travaux',
+    description:
+      'Remplacement d’ampoules, montage de meubles, petites réparations : un coup de main fiable pour tout ce qui traîne.',
+    icon: 'wrench',
+    image: { src: '/images/petits-travaux.webp', alt: 'Agent RK Nettoyage changeant une ampoule au plafond' },
+  },
+]
+
+const items: ServiceView[] = services?.length
+  ? services.map((s) => ({
+      title: s.title,
+      description: s.shortDescription,
+      icon: s.icon,
+      image: hasImage(s.image)
+        ? { src: urlFor(s.image).width(1000).height(750).fit('crop').url(), alt: s.image.alt ?? s.title }
+        : { src: '/images/produits.webp', alt: s.title },
+    }))
+  : DEFAULT_SERVICES
+---
+
+<section id="prestations" class="bg-white py-20 md:py-28">
+  <div class="container-page">
+    <SectionHeading
+      eyebrow="04 // Nos prestations"
+      title="Des services complets pour vos espaces"
+      subtitle="Particuliers, professionnels, syndics : nous intervenons pour l’entretien courant comme pour les besoins ponctuels."
+    />
+
+    <div class="mt-14 space-y-16 md:mt-20 md:space-y-24">
+      {
+        items.map((service, i) => (
+          <article class="grid items-center gap-8 md:grid-cols-2 md:gap-16">
+            <div class:list={[i % 2 === 1 && 'md:order-2']}>
+              <img
+                src={service.image.src}
+                alt={service.image.alt}
+                class="aspect-[4/3] w-full rounded-2xl object-cover shadow-card"
+                loading="lazy"
+                decoding="async"
+                width="1000"
+                height="750"
+              />
+            </div>
+            <div class:list={[i % 2 === 1 && 'md:order-1']}>
+              <p class="eyebrow flex items-center gap-2">
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand/10 text-brand">
+                  <Icon name={service.icon} class="h-4 w-4" />
+                </span>
+                Prestation {String(i + 1).padStart(2, '0')}
+              </p>
+              <h3 class="mt-4 text-2xl leading-tight font-semibold text-brand-dark md:text-3xl">{service.title}</h3>
+              {service.description && (
+                <p class="mt-4 text-sm leading-relaxed text-brand-dark/65 md:text-base">{service.description}</p>
+              )}
+              <a href="#devis" class="btn btn-primary mt-7" data-service={service.title}>
+                Demander un devis
+              </a>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

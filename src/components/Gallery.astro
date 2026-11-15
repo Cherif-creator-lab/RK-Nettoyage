@@ -1,0 +1,45 @@
+---
+import SectionHeading from './SectionHeading.astro'
+
+// Images illustratives (pas d'avant/après), rangées dans public/images/
+const photos = [
+  { src: '/images/vitres.webp', alt: 'Nettoyage de vitres à la raclette', label: 'Vitres', position: 'object-center' },
+  { src: '/images/sols.webp', alt: 'Lavage du sol d’un hall de bureaux', label: 'Sols et halls', position: 'object-center' },
+  { src: '/images/espaces-verts.webp', alt: 'Taille d’une haie dans un jardin', label: 'Espaces verts', position: 'object-center' },
+  { src: '/images/chariot.webp', alt: 'Agent poussant un chariot de ménage dans un couloir', label: 'Parties communes', position: 'object-top' },
+  { src: '/images/petits-travaux.webp', alt: 'Remplacement d’une ampoule au plafond', label: 'Petits travaux', position: 'object-center' },
+  { src: '/images/hero.webp', alt: 'Dépoussiérage d’étagères dans des bureaux', label: 'Bureaux', position: 'object-right' },
+]
+---
+
+<section id="galerie" class="bg-surface py-20 md:py-28">
+  <div class="container-page">
+    <SectionHeading
+      eyebrow="05 // En images"
+      title="Nos prestations en images"
+      subtitle="Un aperçu de nos interventions au quotidien, chez les particuliers comme chez les professionnels."
+    />
+
+    <ul class="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+      {
+        photos.map((photo) => (
+          <li class="group relative aspect-square overflow-hidden rounded-xl bg-brand/10 md:aspect-[4/3]">
+            <img
+              src={photo.src}
+              alt={photo.alt}
+              class:list={[
+                'h-full w-full object-cover transition duration-500 group-hover:scale-105',
+                photo.position,
+              ]}
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="absolute bottom-2 left-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-medium text-brand-dark backdrop-blur md:bottom-3 md:left-3 md:text-xs">
+              {photo.label}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

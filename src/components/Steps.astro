@@ -1,0 +1,81 @@
+---
+import Icon from './Icon.astro'
+import SectionHeading from './SectionHeading.astro'
+import { fetchSanity } from '../lib/sanity'
+
+interface Step {
+  title?: string
+  text?: string
+  icon?: string
+}
+
+const data = await fetchSanity<{ steps?: Step[] }>(`*[_id == "homePage"][0]{ steps }`)
+
+const DEFAULT_STEPS: Step[] = [
+  {
+    title: 'Demandez votre devis',
+    text: 'Décrivez votre besoin en quelques clics : type de prestation, surface, fréquence. Nous vous répondons rapidement avec un devis gratuit.',
+    icon: 'clipboard-list',
+  },
+  {
+    title: 'Choisissez votre créneau',
+    text: "Sélectionnez la date et l'heure qui vous conviennent dans notre calendrier, en semaine comme le week-end.",
+    icon: 'calendar-check',
+  },
+  {
+    title: "On s'occupe de tout",
+    text: 'Notre équipe arrive avec le matériel et les produits adaptés. Vous profitez d’un intérieur impeccable, sans effort.',
+    icon: 'sparkles',
+  },
+]
+
+const steps = data?.steps?.length ? data.steps : DEFAULT_STEPS
+---
+
+<section id="etapes" class="bg-white py-20 md:py-28">
+  <div class="container-page grid gap-10 md:grid-cols-2 md:grid-rows-[auto_1fr] md:gap-x-16 md:gap-y-8">
+    <SectionHeading
+      eyebrow="01 // Comment ça marche"
+      title="Un intérieur impeccable en 3 étapes"
+      align="left"
+      class="md:col-start-2 md:row-start-1"
+    />
+
+    <div class="md:col-start-1 md:row-span-2 md:row-start-1 md:self-center">
+      <img
+        src="/images/produits.webp"
+        alt="Produits et chiffons de nettoyage posés sur une table lumineuse"
+        class="aspect-[4/3] w-full rounded-2xl object-cover shadow-card md:aspect-[4/5]"
+        loading="lazy"
+        decoding="async"
+        width="1024"
+        height="576"
+      />
+    </div>
+
+    <ol class="md:col-start-2 md:row-start-2">
+      {
+        steps.map((step, i) => (
+          <li class="relative flex gap-5 pb-10 last:pb-0">
+            {i < steps.length - 1 && (
+              <span
+                class="absolute top-14 bottom-2 left-6 -translate-x-1/2 border-l-2 border-dotted border-brand/35"
+                aria-hidden="true"
+              />
+            )}
+            <span class="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand text-white ring-8 ring-white">
+              <Icon name={step.icon} class="h-5 w-5" />
+            </span>
+            <div class="pt-2">
+              <h3 class="text-lg text-brand-dark">
+                <span class="sr-only">Étape {i + 1} : </span>
+                {step.title}
+              </h3>
+              {step.text && <p class="mt-2 text-sm leading-relaxed text-brand-dark/65">{step.text}</p>}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

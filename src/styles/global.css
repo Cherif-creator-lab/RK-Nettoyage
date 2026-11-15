@@ -10,6 +10,18 @@
   --color-accent: #f2c230;      /* accent jaune */
 
   --shadow-card: 0 1px 2px rgb(31 51 44 / 0.04), 0 8px 24px rgb(31 51 44 / 0.06);
+
+  /* Bandeau défilant des zones */
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
 }
 
 @layer base {

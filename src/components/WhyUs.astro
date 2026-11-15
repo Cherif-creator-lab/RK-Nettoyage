@@ -1,0 +1,67 @@
+---
+import Icon from './Icon.astro'
+import SectionHeading from './SectionHeading.astro'
+import { fetchSanity } from '../lib/sanity'
+
+interface Card {
+  title?: string
+  text?: string
+  icon?: string
+}
+
+const data = await fetchSanity<{ whyCards?: Card[] }>(`*[_id == "homePage"][0]{ whyCards }`)
+
+const DEFAULT_CARDS: Card[] = [
+  {
+    title: 'Savoir-faire et rigueur',
+    text: 'Des méthodes éprouvées et un matériel professionnel pour un travail soigné, du sol au plafond.',
+    icon: 'star',
+  },
+  {
+    title: 'Fiabilité et sécurité',
+    text: 'Intervenants assurés, ponctuels et discrets. Vous nous confiez vos clés en toute sérénité.',
+    icon: 'shield-check',
+  },
+  {
+    title: 'Sur mesure',
+    text: 'Ponctuel ou régulier, particulier ou professionnel : une prestation adaptée à vos besoins et à votre budget.',
+    icon: 'heart',
+  },
+]
+
+const cards = data?.whyCards?.length ? data.whyCards : DEFAULT_CARDS
+---
+
+<section id="pourquoi" class="relative isolate overflow-hidden bg-brand-dark py-20 md:py-28">
+  <img
+    src="/images/sols.webp"
+    alt=""
+    class="absolute inset-0 -z-20 h-full w-full object-cover"
+    loading="lazy"
+    decoding="async"
+  />
+  <div class="absolute inset-0 -z-10 bg-brand-dark/85" aria-hidden="true"></div>
+
+  <div class="container-page">
+    <SectionHeading
+      eyebrow="03 // Pourquoi nous choisir"
+      title="Pourquoi nous choisir"
+      subtitle="Une entreprise locale, à taille humaine, qui met tout en œuvre pour vous offrir un service à la hauteur de votre confiance."
+      tone="dark"
+    />
+
+    <div class="mt-12 grid gap-5 md:grid-cols-3 md:gap-6">
+      {
+        cards.map((card) => (
+          <article class="card flex flex-col items-center text-center">
+            <span class="flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white">
+              <Icon name={card.icon} class="h-6 w-6" />
+            </span>
+            <h3 class="mt-5 text-lg text-brand-dark">{card.title}</h3>
+            {card.text && <p class="mt-3 text-sm leading-relaxed text-brand-dark/65">{card.text}</p>}
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
